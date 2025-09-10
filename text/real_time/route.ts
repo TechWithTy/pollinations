@@ -59,45 +59,47 @@ export async function POST(req: Request) {
 // GET /api/pollinations/text/mcp_server copy 2?feed=image|text&referrer=...
 // Proxies Server-Sent Events (SSE) feeds from Pollinations upstream.
 export async function GET(req: Request) {
-  const incoming = new URL(req.url);
-  const feed = (incoming.searchParams.get("feed") || "text").toLowerCase();
-  const ref = incoming.searchParams.get("referrer");
+	const incoming = new URL(req.url);
+	const feed = (incoming.searchParams.get("feed") || "text").toLowerCase();
+	const ref = incoming.searchParams.get("referrer");
 
-  const upstreamBase = feed === "image"
-    ? "https://image.pollinations.ai/feed"
-    : "https://text.pollinations.ai/feed";
+	const upstreamBase =
+		feed === "image"
+			? "https://image.pollinations.ai/feed"
+			: "https://text.pollinations.ai/feed";
 
-  const upstreamUrl = new URL(upstreamBase);
-  if (ref) upstreamUrl.searchParams.set("referrer", ref);
+	const upstreamUrl = new URL(upstreamBase);
+	if (ref) upstreamUrl.searchParams.set("referrer", ref);
 
-  try {
-    const upstream = await fetch(upstreamUrl.toString(), {
-      method: "GET",
-      headers: {
-        Accept: "text/event-stream",
-        Connection: "keep-alive",
-        "Cache-Control": "no-cache",
-      },
-    });
+	try {
+		const upstream = await fetch(upstreamUrl.toString(), {
+			method: "GET",
+			headers: {
+				Accept: "text/event-stream",
+				Connection: "keep-alive",
+				"Cache-Control": "no-cache",
+			},
+		});
 
-    if (!upstream.body) {
-      return new Response("Upstream did not return a stream", { status: 502 });
-    }
+		if (!upstream.body) {
+			return new Response("Upstream did not return a stream", { status: 502 });
+		}
 
-    // Pass-through SSE stream
-    return new Response(upstream.body, {
-      status: upstream.status,
-      headers: {
-        "Content-Type": upstream.headers.get("Content-Type") || "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-        "Transfer-Encoding": "chunked",
-      },
-    });
-  } catch (e: unknown) {
-    return new Response(
-      JSON.stringify({ error: { message: (e as Error).message } }),
-      { status: 502, headers: { "Content-Type": "application/json" } },
-    );
-  }
+		// Pass-through SSE stream
+		return new Response(upstream.body, {
+			status: upstream.status,
+			headers: {
+				"Content-Type":
+					upstream.headers.get("Content-Type") || "text/event-stream",
+				"Cache-Control": "no-cache",
+				Connection: "keep-alive",
+				"Transfer-Encoding": "chunked",
+			},
+		});
+	} catch (e: unknown) {
+		return new Response(
+			JSON.stringify({ error: { message: (e as Error).message } }),
+			{ status: 502, headers: { "Content-Type": "application/json" } },
+		);
+	}
 }

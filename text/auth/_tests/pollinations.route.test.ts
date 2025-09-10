@@ -84,23 +84,37 @@ describe("Function Calling (chat-completion) route", () => {
 	});
 
 	it("forwards Authorization header to upstream", async () => {
-		const upstreamJson = { id: "ok", choices: [{ message: { role: "assistant", content: "auth" } }] };
-		const mockFetch = vi.fn().mockImplementation((_url: string, init?: RequestInit) => {
-			// Assert header was forwarded
-			expect(init?.headers && (init.headers as Record<string, string>)["Authorization"]).toBe("Bearer TEST_TOKEN");
-			return Promise.resolve(
-				new Response(JSON.stringify(upstreamJson), {
-					status: 200,
-					headers: { "Content-Type": "application/json" },
-				}),
-			);
-		});
+		const upstreamJson = {
+			id: "ok",
+			choices: [{ message: { role: "assistant", content: "auth" } }],
+		};
+		const mockFetch = vi
+			.fn()
+			.mockImplementation((_url: string, init?: RequestInit) => {
+				// Assert header was forwarded
+				expect(
+					init?.headers &&
+						(init.headers as Record<string, string>)["Authorization"],
+				).toBe("Bearer TEST_TOKEN");
+				return Promise.resolve(
+					new Response(JSON.stringify(upstreamJson), {
+						status: 200,
+						headers: { "Content-Type": "application/json" },
+					}),
+				);
+			});
 		global.fetch = mockFetch as unknown as typeof fetch;
 
 		const req = new Request(URL, {
 			method: "POST",
-			headers: { "Content-Type": "application/json", Authorization: "Bearer TEST_TOKEN" },
-			body: JSON.stringify({ model: "openai", messages: [{ role: "user", content: "hello" }] }),
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: "Bearer TEST_TOKEN",
+			},
+			body: JSON.stringify({
+				model: "openai",
+				messages: [{ role: "user", content: "hello" }],
+			}),
 		});
 		const res = await POST(req);
 		expect(res.status).toBe(200);
@@ -109,7 +123,10 @@ describe("Function Calling (chat-completion) route", () => {
 	});
 
 	it("appends referrer param to upstream URL", async () => {
-		const upstreamJson = { id: "ok", choices: [{ message: { role: "assistant", content: "ref" } }] };
+		const upstreamJson = {
+			id: "ok",
+			choices: [{ message: { role: "assistant", content: "ref" } }],
+		};
 		const mockFetch = vi.fn().mockImplementation((url: string) => {
 			// Assert referrer is included in forwarded URL
 			expect(url).toContain("referrer=mywebapp.com");
@@ -125,7 +142,10 @@ describe("Function Calling (chat-completion) route", () => {
 		const req = new Request(`${URL}?referrer=mywebapp.com`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ model: "openai", messages: [{ role: "user", content: "hello" }] }),
+			body: JSON.stringify({
+				model: "openai",
+				messages: [{ role: "user", content: "hello" }],
+			}),
 		});
 		const res = await POST(req);
 		expect(res.status).toBe(200);

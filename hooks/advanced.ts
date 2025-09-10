@@ -134,7 +134,7 @@ export function AdvancedChat({
 `;
 
 export const pollinationsAdvancedHookExamples = {
-  advancedTextHookTsx,
-  advancedImageHookTsx,
-  advancedChatHookTsx,
+	advancedTextHookTsx,
+	advancedImageHookTsx,
+	advancedChatHookTsx,
 };
